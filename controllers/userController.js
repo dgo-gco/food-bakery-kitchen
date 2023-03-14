@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 
 const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({});
+    const users = await User.find({}).populate('courses').populate('subscribedAccount');
     return res.status(200).send({
       msg: "Here you have all the users:",
       users,
@@ -18,7 +18,7 @@ const getAllUsers = async (req, res) => {
 
 const createUsers = async (req, res) => {
   try {
-    const { name, lastName, email, zipCode, password } = req.body;
+    const { name, lastName, email, zipCode, password, subscribedAccount } = req.body;
     if (!(name || lastName || email || zipCode || password)) {
       return res.status(200).send({
         msg: "All fields are required",
@@ -37,6 +37,7 @@ const createUsers = async (req, res) => {
       email: email.toLowerCase(),
       zipCode,
       password: hashedPassword,
+      subscribedAccount
     });
 
     const token = jwt.sign({}, process.env.TOKEN_KEY, { expiresIn: "3m" });

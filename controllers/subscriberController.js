@@ -2,7 +2,7 @@ const Subscriber = require("../models/subscriberModel");
 
 const getAllSubscribers = async (req, res) => {
   try {
-    const subscribers = await Subscriber.find({});
+    const subscribers = await Subscriber.find({}).populate('courses')
     return res.status(200).send({
       msg: "Here you have all the subscribers:",
       subscribers,
@@ -23,7 +23,7 @@ const createSubscribers = async (req, res) => {
       });
     }
 
-    const subscriber = await Subscriber.create({
+    let subscriber = await Subscriber.create({
       name,
       email,
       zipCode,
@@ -40,6 +40,7 @@ const createSubscribers = async (req, res) => {
     });
   }
 };
+ 
 
 const getSubscriberById = async (req, res) => {
   try {
