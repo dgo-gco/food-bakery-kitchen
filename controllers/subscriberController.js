@@ -40,7 +40,6 @@ const createSubscribers = async (req, res) => {
     });
   }
 };
- 
 
 const getSubscriberById = async (req, res) => {
   try {
