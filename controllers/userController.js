@@ -18,16 +18,12 @@ const getAllUsers = async (req, res) => {
 
 const createUsers = async (req, res) => {
   try {
-    const { name, lastName, email, zipCode, password, subscribedAccount } = req.body;
+    const { name, lastName, email, zipCode, password } = req.body;
     if (!(name || lastName || email || zipCode || password)) {
       return res.status(200).send({
         msg: "All fields are required",
       });
     }
-
-    const emailExists = await User.findOne({ email });
-    if (emailExists)
-      return res.status(200).send({ msg: "User already exists" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -37,8 +33,12 @@ const createUsers = async (req, res) => {
       email: email.toLowerCase(),
       zipCode,
       password: hashedPassword,
-      subscribedAccount
     });
+
+    const isSubscribed = await Subscriber.findOne({ email })
+    if(isSubscribed){
+      user.subscribedAccount = isSubscribed._id
+    }
 
     const token = jwt.sign({}, process.env.TOKEN_KEY, { expiresIn: "3m" });
     user.token = token;
