@@ -1,10 +1,13 @@
 const User = require("../models/userModel");
+const Subscriber = require("../models/subscriberModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({}).populate('courses').populate('subscribedAccount');
+    const users = await User.find({})
+      .populate("courses")
+      .populate("subscribedAccount");
     return res.status(200).send({
       msg: "Here you have all the users:",
       users,
@@ -18,16 +21,12 @@ const getAllUsers = async (req, res) => {
 
 const createUsers = async (req, res) => {
   try {
-    const { name, lastName, email, zipCode, password, subscribedAccount } = req.body;
+    const { name, lastName, email, zipCode, password } = req.body;
     if (!(name || lastName || email || zipCode || password)) {
       return res.status(200).send({
         msg: "All fields are required",
       });
     }
-
-    const emailExists = await User.findOne({ email });
-    if (emailExists)
-      return res.status(200).send({ msg: "User already exists" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -37,8 +36,12 @@ const createUsers = async (req, res) => {
       email: email.toLowerCase(),
       zipCode,
       password: hashedPassword,
-      subscribedAccount
     });
+
+    const isSubscribed = await Subscriber.findOne({ email });
+    if (isSubscribed) {
+      user.subscribedAccount = isSubscribed._id;
+    }
 
     const token = jwt.sign({}, process.env.TOKEN_KEY, { expiresIn: "3m" });
     user.token = token;
@@ -84,75 +87,77 @@ const logInUser = async (req, res) => {
 
 const logOutUser = async (req, res) => {
   try {
-      console.log(req.session)
-      return res.status(200).send({
-          message: req.session
-      })
+    req.logout(function (err) {
+      if (err) {
+        return next(err);
+      }
+      res.send("logged out!");
+    });
   } catch (error) {
-      return res.status(500).send({
-          message: error.message
-      })
+    return res.status(500).send({
+      message: error.message,
+    });
   }
 };
 
 const getUser = async (req, res) => {
-    try {
-        const {id} = req.params
-        const user = await User.findById(id)
-        if(!user){
-            return res.status(200).send({
-                msg: 'User not registered'
-            })
-        }
-        return res.status(200).send({
-            msg: 'User found:',
-            user
-        })
-    } catch (error) {
-        return res.status(500).send({
-            message: error.message
-        })
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(200).send({
+        msg: "User not registered",
+      });
     }
+    return res.status(200).send({
+      msg: "User found:",
+      user,
+    });
+  } catch (error) {
+    return res.status(500).send({
+      message: error.message,
+    });
+  }
 };
 
 const editUser = async (req, res) => {
-    try {
-        const {id} = req.params
-        const user = await User.findByIdAndUpdate(id, req.body)
-        if(!user){
-            return res.status(200).send({
-                msg: 'User not registered'
-            })
-        }
-        return res.status(200).send({
-            msg: 'User found:',
-            user
-        })
-    } catch (error) {
-        return res.status(500).send({
-            message: error.message
-        })
+  try {
+    const { id } = req.params;
+    const user = await User.findByIdAndUpdate(id, req.body);
+    if (!user) {
+      return res.status(200).send({
+        msg: "User not registered",
+      });
     }
+    return res.status(200).send({
+      msg: "User found:",
+      user,
+    });
+  } catch (error) {
+    return res.status(500).send({
+      message: error.message,
+    });
+  }
 };
 
 const deleteUser = async (req, res) => {
-    try {
-        const {id} = req.params
-        const user = await User.findByIdAndDelete(id)
-        if(!user){
-            return res.status(200).send({
-                msg: 'User not registered'
-            })
-        }
-        return res.status(200).send({
-            msg: 'User deleted:',
-            user
-        })
-    } catch (error) {
-        return res.status(500).send({
-            message: error.message
-        })
+  try {
+    const { id } = req.params;
+    const user = await User.findByIdAndDelete(id);
+    if (!user) {
+      return res.status(200).send({
+        msg: "User not registered",
+      });
     }
+    return res.status(200).send({
+      msg: "User deleted:",
+      user,
+    });
+  } catch (error) {
+    return res.status(500).send({
+      message: error.message,
+    });
+  }
 };
 
 module.exports = {
